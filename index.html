@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Eventos ARMY — BTS Calendar</title>
+    <link rel="stylesheet" href="normalize.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Menu Superior -->
+    <div class="main-header">
+        <div class="main-header__container">
+            <div class="main-header__logo">
+                <span class="logo-icon">🔮</span> Mis Eventos ARMY
+            </div>
+
+            <button class="main-header__toggle" id="menu-toggle">
+                 <div class="main-header__bar"></div>
+                 <div class="main-header__bar"></div>
+                 <div class="main-header__bar"></div>
+            </button>
+
+            <nav class="main-nav" id="main-nav">
+                <ul class="main-nav__list">
+                    <li class="main-nav__item"><a href="#" class="main-nav__link">Buscar</a></li>
+                    <li class="main-nav__item"><a href="#" class="main-nav__link">Ayuda</a></li>
+                    <li class="main-nav__item"><a href="#" class="main-nav__link">Configuración</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Contenedor Principal -->
+    <div class="container">
+        <!-- Banner Superior Corregido (Lila claro/Rosa y Logos Oficiales de image_7d26c0.png) -->
+        <div class="calendar-banner">
+            <!-- Logo Oficial de BTS en CSS -->
+            <div class="bts-logo-css" title="Logo BTS">
+                <div class="door left"></div>
+                <div class="door right"></div>
+            </div>
+
+            <div class="banner-content">
+                <h1>✨💜Bangtan Calendar💜✨</h1>
+            </div>
+
+            <!-- Logo Oficial de ARMY en CSS -->
+            <div class="army-logo-css" title="Logo ARMY">
+                <div class="door left"></div>
+                <div class="door right"></div>
+            </div>
+        </div>
+
+        <!-- Cabecera del mes con botones anterior/siguiente -->
+        <div class="month-header">
+            <button class="month-nav" id="prev-month">&#8249;</button>
+            <div class="month" id="current-month">June 2026</div>
+            <button class="month-nav" id="next-month">&#8250;</button>
+        </div>
+
+        <!-- Días de la semana -->
+        <div class="days">
+            <div class="days__item">Mon</div>
+            <div class="days__item">Tue</div>
+            <div class="days__item">Wed</div>
+            <div class="days__item">Thu</div>
+            <div class="days__item">Fri</div>
+            <div class="days__item">Sat</div>
+            <div class="days__item">Sun</div>
+        </div>
+        
+        <!-- Grilla del Calendario -->
+        <div class="schedule" id="calendar-grid"></div>
+    </div>
+
+    <!-- Modal para agregar eventos -->
+    <div class="modal" id="event-modal">
+        <div class="modal__content">
+            <div class="modal__header">
+                <h2 id="modal-title">Agregar Evento</h2>
+                <button class="modal__close" id="close-modal">&times;</button>
+            </div>
+            <form id="event-form">
+                <div class="form__group">
+                    <label for="event-name">Nombre del Evento *</label>
+                    <input type="text" id="event-name" placeholder="Ej: Stream de 'Seven' o Fiesta ARMY" required>
+                </div>
+                <div class="form__group">
+                    <label for="event-description">Descripción *</label>
+                    <textarea id="event-description" placeholder="Añade los detalles de este evento..." rows="3" required></textarea>
+                </div>
+                <div class="form__group">
+                    <label for="event-time">Hora *</label>
+                    <input type="time" id="event-time" required>
+                </div>
+                <div class="form__group">
+                    <label for="event-icon">Ícono Alusivo</label>
+                    <select id="event-icon">
+                        <option value="🔮">🔮 BTS / ARMY</option>
+                        <option value="🎤">🎤 Concierto / Stream</option>
+                        <option value="🎂">🎂 Cumpleaños / Fiesta</option>
+                        <option value="💜">💜 Love / Borahae</option>
+                        <option value="🌟">🌟 Festivo Colombia</option>
+                        <option value="🎉">🎉 Celebración / Fin de Año</option>
+                    </select>
+                </div>
+                <input type="hidden" id="event-day">
+                <button type="submit" class="form__submit">Guardar Evento en la Caja 💜</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // LÓGICA DEL MENÚ RESPONSIVE
+        const menuToggle = document.getElementById("menu-toggle");
+        const mainNav = document.getElementById("main-nav");
+
+        menuToggle.addEventListener('click', function(){
+            mainNav.classList.toggle('main-nav__open');
+        });
+
+        // LÓGICA DEL CALENDARIO DINÁMICO INFINITO
+        const calendarGrid    = document.getElementById("calendar-grid");
+        const currentMonthEl  = document.getElementById("current-month");
+        const modal           = document.getElementById("event-modal");
+        const closeModalBtn   = document.getElementById("close-modal");
+        const eventForm       = document.getElementById("event-form");
+        const eventNameEl     = document.getElementById("event-name");
+        const eventDescEl     = document.getElementById("event-description");
+        const eventTimeEl     = document.getElementById("event-time");
+        const eventIconEl     = document.getElementById("event-icon");
+        const eventDayEl      = document.getElementById("event-day");
+        const prevMonthBtn    = document.getElementById("prev-month");
+        const nextMonthBtn    = document.getElementById("next-month");
+
+        const today = new Date();
+        let currentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        let events = {};
+
+        const monthNames = [
+            'January','February','March','April','May','June',
+            'July','August','September','October','November','December'
+        ];
+
+        function loadEvents() {
+            const saved = localStorage.getItem('calendarEventsARMY');
+            if (saved) events = JSON.parse(saved);
+        }
+
+        function saveEvents() {
+            localStorage.setItem('calendarEventsARMY', JSON.stringify(events));
+        }
+
+        function renderCalendar() {
+            const year  = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            currentMonthEl.textContent = `${monthNames[month]} ${year}`;
+
+            const firstDay      = new Date(year, month, 1).getDay();
+            const daysInMonth   = new Date(year, month + 1, 0).getDate();
+            const prevDaysTotal = new Date(year, month, 0).getDate();
+
+            let startOffset = firstDay === 0 ? 6 : firstDay - 1;
+            let html = '';
+
+            for (let i = startOffset - 1; i >= 0; i--) {
+                const day = prevDaysTotal - i;
+                html += `<div class="schedule__days schedule__days--other-month"><div class="schedule__day-number">${day}</div></div>`;
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                let dayEvents = [...(events[dateKey] || [])];
+
+                // Color estándar para los festivos de Colombia (Azul celeste pastel)
+                const colHoliday = "#4EA8DE";
+
+                // ==============================================================
+                // REGLAS COMPLETA DE FESTIVOS COLOMBIA + BTS (INFINITO CUALQUIER AÑO)
+                // ==============================================================
+                
+                // ---- ENERO (0) ----
+                if (month === 0 && day === 1) {
+                    dayEvents.push({ id: 'col-1', name: "Año Nuevo ✨", description: "Festivo Nacional — ¡Inicio de año!", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+                if (month === 0 && day === 6) { // Aproximado fijo por Día de Reyes
+                    dayEvents.push({ id: 'col-2', name: "Día de los Reyes Magos", description: "Festivo por la epifanía de los Reyes.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+
+                // ---- FEBRERO (1) ----
+                if (month === 1 && day === 14) {
+                    dayEvents.push({ id: 'f-v', name: "San Valentín ❤️", description: "Día internacional del amor y la amistad.", time: "08:00", icon: "💝", color: "#B5179E" });
+                }
+                if (month === 1 && day === 18) {
+                    dayEvents.push({ id: 'bts-jh', name: "Cumple de J-Hope ☀️", description: "Celebración del cumpleaños de nuestra esperanza Hobi.", time: "00:00", icon: "🐿️", color: "#6F42C1" });
+                }
+
+                // ---- MARZO (2) ----
+                if (month === 2 && day === 9) {
+                    dayEvents.push({ id: 'bts-sg', name: "Cumple de Suga 🐱", description: "Día especial para celebrar a nuestro increíble Min Yoongi.", time: "00:00", icon: "🐱", color: "#7209B7" });
+                }
+                if (month === 2 && day === 23) { // Fijo aproximado de San José
+                    dayEvents.push({ id: 'col-3', name: "Día de San José", description: "Festivo religioso nacional.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+                // Simulación Semana Santa fija a finales de Marzo
+                if (month === 2 && day === 26) {
+                    dayEvents.push({ id: 'col-ss1', name: "Jueves Santo", description: "Semana Santa — Reflexión y descanso.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+                if (month === 2 && day === 27) {
+                    dayEvents.push({ id: 'col-ss2', name: "Viernes Santo", description: "Semana Santa — Festivo oficial.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+
+                // ---- MAYO (4) ----
+                if (month === 4 && day === 1) {
+                    dayEvents.push({ id: 'col-4', name: "Día del Trabajo 💼", description: "Festivo Nacional del trabajador.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+                if (month === 4 && day === 18) { // Fijo aproximado Ascensión
+                    dayEvents.push({ id: 'col-5', name: "Día de la Ascensión", description: "Festivo oficial en Colombia.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+
+                // ---- JUNIO (5) ----
+                if (month === 5 && day === 8) { // Fijo aproximado Corpus
+                    dayEvents.push({ id: 'col-6', name: "Corpus Christi", description: "Festivo oficial religioso.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+                if (month === 5 && day === 13) {
+                    dayEvents.push({ id: 'bts-ann', name: "¡Aniversario de BTS! 🎉", description: "Festa Oficial - Cumpleaños de Bangtan desde su debut en 2013.", time: "00:00", icon: "🔮", color: "#6F42C1" });
+                }
+                if (month === 5 && day === 15) { // Fijo aproximado Sagrado Corazón
+                    dayEvents.push({ id: 'col-7', name: "Sagrado Corazón", description: "Festivo nacional tradicional.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+                if (month === 5 && day === 29) {
+                    dayEvents.push({ id: 'col-8', name: "San Pedro y San Pablo", description: "Fiesta y feriado religioso nacional.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+
+                // ---- JULIO (6) ----
+                if (month === 6 && day === 9) {
+                    dayEvents.push({ id: 'bts-army', name: "¡Día de ARMY! 💜", description: "Aniversario oficial de nuestro hermoso fandom.", time: "00:00", icon: "🔮", color: "#6F42C1" });
+                }
+                if (month === 6 && day === 20) {
+                    dayEvents.push({ id: 'col-9', name: "Independencia de Colombia", description: "¡Fiesta Patria Nacional! 🇨🇴", time: "00:00", icon: "🇨🇴", color: colHoliday });
+                }
+
+                // ---- AGOSTO (7) ----
+                if (month === 7 && day === 7) {
+                    dayEvents.push({ id: 'col-10', name: "Batalla de Boyacá", description: "Fiesta patria histórica en Colombia.", time: "00:00", icon: "⚔️", color: colHoliday });
+                }
+                if (month === 7 && day === 17) {
+                    dayEvents.push({ id: 'col-11', name: "Asunción de la Virgen", description: "Feriado oficial religioso nacional.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+
+                // ---- SEPTIEMBRE (8) ----
+                if (month === 8 && day === 1) {
+                    dayEvents.push({ id: 'bts-jk', name: "Cumple de Jungkook 🎂", description: "Celebración mundial por el cumpleaños de nuestro Golden Maknae 🐰✨", time: "00:00", icon: "🐰", color: "#6F42C1" });
+                }
+                if (month === 8 && day === 12) {
+                    dayEvents.push({ id: 'bts-rm', name: "Cumpleaños de RM 🐨", description: "Día especial para celebrar al gran líder.", time: "00:00", icon: "🐨", color: "#7209B7" });
+                }
+
+                // ---- OCTUBRE (9) ----
+                if (month === 9 && day === 12) {
+                    dayEvents.push({ id: 'col-12', name: "Día de la Raza", description: "Conmemoración del respeto a la diversidad cultural.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+                if (month === 9 && day === 13) {
+                    dayEvents.push({ id: 'bts-jm', name: "Cumple de Jimin 🐥", description: "Día de celebrar el talento de nuestro hermoso Jimin.", time: "00:00", icon: "🐥", color: "#6F42C1" });
+                }
+                if (month === 9 && day === 31) {
+                    dayEvents.push({ id: 'f-h', name: "Halloween 🎃", description: "Noche de dulces y disfraces.", time: "18:00", icon: "👻", color: "#E76F51" });
+                }
+
+                // ---- NOVIEMBRE (10) ----
+                if (month === 10 && day === 2) {
+                    dayEvents.push({ id: 'col-13', name: "Día de Todos los Santos", description: "Festivo nacional transferido.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+                if (month === 10 && day === 16) {
+                    dayEvents.push({ id: 'col-14', name: "Independencia de Cartagena", description: "Fiesta oficial de la heroica.", time: "00:00", icon: "🌟", color: colHoliday });
+                }
+
+                // ---- DICIEMBRE (11) ----
+                if (month === 11 && day === 4) {
+                    dayEvents.push({ id: 'bts-jn', name: "Cumple de Jin 🦙", description: "Worldwide Handsome Day! Cumpleaños del mayor.", time: "00:00", icon: "🐹", color: "#7209B7" });
+                }
+                if (month === 11 && day === 8) {
+                    dayEvents.push({ id: 'col-15', name: "Inmaculada Concepción", description: "Día de las Velitas / Festivo nacional religioso.", time: "00:00", icon: "🕯️", color: colHoliday });
+                }
+                if (month === 11 && day === 25) {
+                    dayEvents.push({ id: 'col-16', name: "Navidad 🎄", description: "¡Felices Fiestas y Nochebuena!", time: "00:00", icon: "🎁", color: colHoliday });
+                }
+                if (month === 11 && day === 30) {
+                    dayEvents.push({ id: 'bts-v', name: "Cumpleaños de V (Tae) 🐯", description: "Celebración por el nacimiento de Taehyung.", time: "00:00", icon: "🐯", color: "#6F42C1" });
+                }
+                if (month === 11 && day === 31) {
+                    dayEvents.push({ id: 'col-17', name: "Año Viejo 🎆", description: "Último día del año para celebrar en familia.", time: "20:00", icon: "🎉", color: "#E76F51" });
+                }
+
+                const isToday = (day === today.getDate() && month === today.getMonth() && year === today.getFullYear());
+                const dayOfWeek = new Date(year, month, day).getDay();
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
+                html += `
+                    <div class="schedule__days${isToday ? ' schedule__days--today' : ''}${isWeekend ? ' schedule__days--weekend' : ''}" data-day="${day}" data-date="${dateKey}">
+                        <div class="schedule__day-number">${day}</div>
+                        <div class="schedule__events">
+                            ${dayEvents.map(ev => `
+                                <div class="event-item" style="border-left-color:${ev.color}; background-color:${ev.color}15" title="${ev.name} - ${ev.description}">
+                                    <span class="event-icon">${ev.icon}</span>
+                                    <div class="event-content-box">
+                                        <span class="event-name">${ev.name}</span>
+                                        <span class="event-time">${ev.time}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+            }
+
+            const totalCells = startOffset + daysInMonth;
+            const remaining  = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let day = 1; day <= remaining; day++) {
+                html += `<div class="schedule__days schedule__days--other-month"><div class="schedule__day-number">${day}</div></div>`;
+            }
+
+            calendarGrid.innerHTML = html;
+
+            document.querySelectorAll('.schedule__days:not(.schedule__days--other-month)').forEach(el => {
+                el.addEventListener('click', function() {
+                    openModal(this.dataset.day, this.dataset.date);
+                });
+            });
+        }
+
+        prevMonthBtn.addEventListener('click', function() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+        nextMonthBtn.addEventListener('click', function() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+
+        function openModal(day, date) {
+            eventDayEl.value = date;
+            eventForm.reset();
+            eventDayEl.value = date;
+            document.getElementById('modal-title').textContent = `Nuevo Evento para el ${date} 💜`;
+            const now = new Date();
+            eventTimeEl.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            modal.style.display = 'flex';
+            setTimeout(() => eventNameEl.focus(), 100);
+        }
+
+        function closeModalHandler() { modal.style.display = 'none'; eventForm.reset(); }
+
+        function addEvent(e) {
+            e.preventDefault();
+            const date  = eventDayEl.value;
+            const name  = eventNameEl.value.trim();
+            const desc  = eventDescEl.value.trim();
+            const time  = eventTimeEl.value;
+            const icon  = eventIconEl.value;
+
+            const btsColors = ['#6F42C1', '#9B5DE5', '#B5179E', '#7209B7', '#480CA8'];
+            const color  = btsColors[Math.floor(Math.random() * btsColors.length)];
+
+            if (!events[date]) events[date] = [];
+            events[date].push({ id: Date.now(), name, description: desc, time, icon, color });
+
+            saveEvents();
+            renderCalendar();
+            closeModalHandler();
+        }
+
+        calendarGrid.addEventListener('click', function(e){ if(e.target.closest('.event-item')) e.stopPropagation(); });
+        closeModalBtn.addEventListener('click', closeModalHandler);
+        window.addEventListener('click', e => { if (e.target === modal) closeModalHandler(); });
+        eventForm.addEventListener('submit', addEvent);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalHandler(); });
+
+        loadEvents();
+        renderCalendar();
+    </script>
+</body>
+</html>

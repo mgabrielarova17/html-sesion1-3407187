@@ -1,0 +1,182 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 40px 0;
+    background-color: #f3e5f5; /* Fondo lila tierno de BTS */
+}
+
+.container {
+    display: flex;
+    flex-direction: column; 
+    width: 98%; /* Un poquito más ancho para que quepan bien los 6 días */
+    height: 760px;
+    background-color: #ffffff;
+    border: 3px solid #512da8; /* Morado BTS */
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0px 12px 30px rgba(81, 45, 168, 0.25);
+}
+
+/* Fila superior para que los días no rocen con las horas */
+.fila-encabezado {
+    display: flex;
+    width: 100%;
+    height: 60px;
+    background-color: #ede7f6;
+    border-bottom: 3px solid #512da8;
+}
+
+.celda-encabezado {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #311b92;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-right: 1px solid #d1c4e9;
+    font-size: 0.9rem;
+}
+
+.hora-titulo {
+    flex: 0 0 14%; /* Ancho ajustado para alinearse con la columna de horas */
+    background-color: #512da8;
+    color: white;
+    border-right: none;
+}
+
+.celda-encabezado:last-child {
+    border-right: none;
+}
+
+/* Área de contenido del horario */
+.contenido-horario {
+    display: flex;
+    width: 100%;
+    height: 694px;
+}
+
+.horas {
+    display: flex;
+    flex-direction: column;
+    width: 14%; /* Alineado con la celda superior */
+    background-color: #512da8;
+    color: white;
+}
+
+.hora {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: rgba(255, 255, 255, 0.2) 1px solid;
+    height: 115px; /* Altura perfecta para las 6 franjas */
+    text-align: center;
+    padding: 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.hora:last-child {
+    border-bottom: none;
+}
+
+.bg-receso {
+    background-color: rgba(255, 255, 255, 0.1);
+    font-style: italic;
+}
+
+.dias {
+    display: flex;
+    width: 86%;
+}
+
+.dia {
+    flex: 1;
+    border-right: 1px solid #d1c4e9;
+    position: relative;
+    background-color: #fafafa;
+}
+
+.dia:last-child {
+    border-right: none;
+}
+
+/* Tarjetas de las Clases con diseño ARMY */
+.clase {
+    position: absolute;
+    left: 4%;
+    width: 92%;
+    border-radius: 12px;
+    padding: 10px 6px;
+    color: white;
+    font-size: 0.8rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease-in-out;
+}
+
+.clase:hover {
+    transform: scale(1.04);
+}
+
+/* Ajustes de posiciones absolutas dentro de la malla */
+.bloque-manana {
+    top: 15px;
+    height: 315px; /* Cubre perfecto de 6:00 am a 12:00 pm */
+}
+
+.bloque-tarde {
+    top: 460px; /* Se acomoda exacto de 2:00 pm a 6:00 pm */
+    height: 215px;
+}
+
+/* Estilo para las imágenes redondas */
+.clase img {
+    width: 42px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.clase small {
+    display: block;
+    margin-top: 2px;
+    opacity: 0.85;
+    font-style: italic;
+    font-size: 0.75rem;
+}
+
+/* Paleta de Degradados oficiales BTS 💜 */
+.tecnica { 
+    background: linear-gradient(135deg, #673ab7, #311b92); 
+}
+
+.interfaz { 
+    background: linear-gradient(135deg, #ba68c8, #7b1fa2); 
+}
+
+.evaluacion { 
+    background: linear-gradient(135deg, #9575cd, #5e35b1); 
+}
+
+.transversal { 
+    background: linear-gradient(135deg, #ab47bc, #4a148c); /* Púrpura-magenta para Vanessa */
+}
+
+.construccion { 
+    background: linear-gradient(135deg, #b39ddb, #4527a0); 
+}
